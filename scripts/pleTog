@@ -1,0 +1,23 @@
+#!/bin/bash
+# Purpose: Toggle Intel KVM parameters for Pause Loop Exiting (PLE) gap and window to observe lock contention with and without its support
+# Usage: sudo ./pleTog                              !!WARNING: TURN OFF ALL VMS BEFORE RUNNING THE CMD OR ELSE IT WONT WORK!!
+
+# Read current ple_gap value
+current_gap=$(cat /sys/module/kvm_intel/parameters/ple_gap)
+
+if [ "$current_gap" = "0" ]; then
+    echo "Toggling PLE ON (128)..."
+    sudo modprobe -r kvm_intel
+    sudo modprobe kvm_intel ple_gap=128 ple_window=4096
+elif [ "$current_gap" = "128" ]; then
+    echo "Toggling PLE OFF (0)..."
+    sudo modprobe -r kvm_intel
+    sudo modprobe kvm_intel ple_gap=0 ple_window=0
+else
+    echo "Current ple_gap is '$current_gap', setting to 128 by default..."
+    sudo modprobe -r kvm_intel
+    sudo modprobe kvm_intel ple_gap=128 ple_window=4096
+fi
+
+echo "Now ple_gap = $(cat /sys/module/kvm_intel/parameters/ple_gap)"
+echo "Now ple_window = $(cat /sys/module/kvm_intel/parameters/ple_window)"
